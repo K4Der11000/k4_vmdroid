@@ -49,22 +49,22 @@
       height: 500px;
       border: none;
     }
-    .api-input, .frame-controls, .extra-controls, .tap-controls {
+    .api-input, .frame-controls {
       display: flex;
+      flex-direction: column;
       padding: 10px;
       background: #2a2a2a;
     }
-    .api-input input, .extra-controls input, .tap-controls input, .controls input {
-      flex: 1;
+    .api-input input, .frame-controls input {
+      margin: 5px 0;
       padding: 5px;
-      margin-right: 5px;
     }
-    .api-input button, .frame-controls button, .extra-controls button, .tap-controls button {
+    .api-input button, .frame-controls button {
       padding: 5px 10px;
       background: #00e676;
       border: none;
       color: #000;
-      margin-right: 5px;
+      margin: 5px 0;
     }
     #loginScreen {
       position: fixed;
@@ -125,9 +125,92 @@
       if (entered === correctPassword) {
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('mainContent').style.display = 'block';
+        generateSimulators();
       } else {
         document.getElementById('loginMessage').innerText = 'Incorrect password.';
       }
     }
-  </script>  <!-- Existing script for simulators continues here --></body>
+
+    function generateSimulators() {
+      const container = document.getElementById('simContainer');
+      for (let i = 1; i <= 100; i++) {
+        const simBox = document.createElement('div');
+        simBox.className = 'sim-box';
+
+        const iframe = document.createElement('iframe');
+        iframe.src = defaultUrl();
+        iframe.id = `simulator-${i}`;
+
+        const apiControls = document.createElement('div');
+        apiControls.className = 'api-input';
+        apiControls.innerHTML = `
+          <input type="text" placeholder="API Key for simulator ${i}" id="api-${i}">
+          <button onclick="submitKey(${i})">Submit</button>
+        `;
+
+        const openUrlControls = document.createElement('div');
+        openUrlControls.className = 'frame-controls';
+        openUrlControls.innerHTML = `
+          <input type="text" placeholder="URL to open in simulator ${i}" id="url-${i}">
+          <button onclick="openUrl(${i})">Open URL</button>
+          <button onclick="tapSimulator(${i})">Tap Screen</button>
+          <input type="number" placeholder="Repeat taps" id="repeatTap-${i}" min="1" max="100">
+          <button onclick="startRepeatedTaps(${i})">Start Repeated Taps</button>
+        `;
+
+        simBox.appendChild(iframe);
+        simBox.appendChild(apiControls);
+        simBox.appendChild(openUrlControls);
+        container.appendChild(simBox);
+      }
+    }
+
+    function defaultUrl() {
+      return "https://appetize.io/embed/b_vfyableb3rimkjc4gfht7aqrn4?device=pixel8&launchUrl=exp%3A%2F%2Fu.expo.dev%2F933fd9c0-1666-11e7-afca-d980795c5824%3Fruntime-version%3Dexposdk%253A52.0.0%26channel-name%3Dproduction%26snack-channel%3DpJgLy4gdzb&params=%7B%22EXDevMenuDisableAutoLaunch%22%3Atrue%2C%22EXKernelDisableNuxDefaultsKey%22%3Atrue%7D&appearance=light&deviceColor=black&scale=auto&orientation=portrait&centered=both";
+    }
+
+    function submitKey(index) {
+      const key = document.getElementById(`api-${index}`).value;
+      localStorage.setItem(`apiKey-${index}`, key);
+      alert(`API key saved for simulator ${index}`);
+    }
+
+    function openUrl(index) {
+      const url = document.getElementById(`url-${index}`).value;
+      const iframe = document.getElementById(`simulator-${index}`);
+      if (url && iframe) {
+        iframe.src = formatAppetizeUrl(url);
+      }
+    }
+
+    function openUrlInAllFrames() {
+      const url = document.getElementById('globalUrl').value;
+      if (!url) return;
+      for (let i = 1; i <= 100; i++) {
+        const iframe = document.getElementById(`simulator-${i}`);
+        if (iframe) iframe.src = formatAppetizeUrl(url);
+      }
+    }
+
+    function formatAppetizeUrl(launchUrl) {
+      return `https://appetize.io/embed/b_vfyableb3rimkjc4gfht7aqrn4?device=pixel8&launchUrl=${encodeURIComponent(launchUrl)}&params=%7B%22EXDevMenuDisableAutoLaunch%22%3Atrue%2C%22EXKernelDisableNuxDefaultsKey%22%3Atrue%7D&appearance=light&deviceColor=black&scale=auto&orientation=portrait&centered=both`;
+    }
+
+    function tapSimulator(index) {
+      const iframe = document.getElementById(`simulator-${index}`);
+      if (iframe) {
+        iframe.contentWindow.postMessage({ type: 'tap', x: 150, y: 250 }, '*');
+      }
+    }
+
+    function startRepeatedTaps(index) {
+      const repeatInput = document.getElementById(`repeatTap-${index}`);
+      let count = parseInt(repeatInput.value) || 1;
+      let interval = setInterval(() => {
+        if (count <= 0) return clearInterval(interval);
+        tapSimulator(index);
+        count--;
+      }, 1000);
+    }
+  </script></body>
 </html>
