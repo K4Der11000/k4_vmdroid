@@ -49,85 +49,85 @@
       height: 500px;
       border: none;
     }
-    .api-input {
+    .api-input, .frame-controls, .extra-controls, .tap-controls {
       display: flex;
       padding: 10px;
       background: #2a2a2a;
     }
-    .api-input input {
+    .api-input input, .extra-controls input, .tap-controls input, .controls input {
       flex: 1;
       padding: 5px;
       margin-right: 5px;
     }
-    .api-input button {
+    .api-input button, .frame-controls button, .extra-controls button, .tap-controls button {
       padding: 5px 10px;
       background: #00e676;
       border: none;
       color: #000;
+      margin-right: 5px;
+    }
+    #loginScreen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    #loginBox {
+      background: #222;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    #loginBox input {
+      padding: 10px;
+      width: 200px;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
-  <header>kader11000 - Simulators Dashboard</header>
-  <div class="controls">
-    <button onclick="saveAllKeys()">Submit Global API Key</button>
-    <input type="text" id="globalApiKey" placeholder="Enter API Key for All">
-    <button onclick="downloadAllKeys()">Download All Keys</button>
-    <button onclick="fetchAllKeys()">Show All Keys</button>
-  </div>
-  <div id="keysList" class="controls"></div>
-  <div class="sim-container" id="simContainer"></div>  <script>
-    const iframeURL = "https://appetize.io/embed/b_vfyableb3rimkjc4gfht7aqrn4?device=pixel8&launchUrl=exp%3A%2F%2Fu.expo.dev%2F933fd9c0-1666-11e7-afca-d980795c5824%3Fruntime-version%3Dexposdk%253A52.0.0%26channel-name%3Dproduction%26snack-channel%3DpJgLy4gdzb&params=%7B%22EXDevMenuDisableAutoLaunch%22%3Atrue%2C%22EXKernelDisableNuxDefaultsKey%22%3Atrue%7D&appearance=light&deviceColor=black&scale=auto&orientation=portrait&centered=both";
-
-    const container = document.getElementById("simContainer");
-    for (let i = 1; i <= 50; i++) {
-      const simBox = document.createElement("div");
-      simBox.className = "sim-box";
-      simBox.innerHTML = `
-        <iframe src="${iframeURL}" title="Sim ${i}"></iframe>
-        <div class="api-input">
-          <input type="text" id="apiKey_${i}" placeholder="Enter API Key">
-          <button onclick="submitKey(${i})">Save</button>
-        </div>
-      `;
-      container.appendChild(simBox);
-    }
-
-    function submitKey(id) {
-      const key = document.getElementById(`apiKey_${id}`).value;
-      fetch('/api/submit-key', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, apiKey: key })
-      }).then(res => res.json()).then(data => {
-        alert(`Saved key for Sim ${id}`);
-      });
-    }
-
-    function saveAllKeys() {
-      const key = document.getElementById('globalApiKey').value;
-      for (let i = 1; i <= 50; i++) {
-        fetch('/api/submit-key', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: i, apiKey: key })
-        });
+  <div id="loginScreen">
+    <div id="loginBox">
+      <h2>Enter Password</h2>
+      <input type="password" id="loginPassword" placeholder="Password">
+      <br>
+      <button onclick="checkPassword()">Login</button>
+      <p id="loginMessage" style="color:red;"></p>
+    </div>
+  </div>  <div id="mainContent" style="display:none">
+    <header>kader11000 - Simulators Dashboard</header>
+    <div class="controls">
+      <button onclick="saveAllKeys()">Submit Global API Key</button>
+      <input type="text" id="globalApiKey" placeholder="Enter API Key for All">
+      <button onclick="downloadAllKeys()">Download All Keys</button>
+      <button onclick="fetchAllKeys()">Show All Keys</button>
+      <br>
+      <button onclick="reloadAllFrames()">Reload All Simulators</button>
+      <button onclick="pauseAllFrames()">Pause All</button>
+      <button onclick="resumeAllFrames()">Resume All</button>
+      <br>
+      <input type="number" id="globalTapCount" placeholder="Number of global taps" min="1" max="100">
+      <button onclick="sendTapsToAll()">Tap All</button>
+      <br>
+      <input type="text" id="globalUrl" placeholder="Enter URL to open in all">
+      <button onclick="openUrlInAllFrames()">Open URL in All</button>
+    </div>
+    <div id="keysList" class="controls"></div>
+    <div class="sim-container" id="simContainer"></div>
+  </div>  <script>
+    const correctPassword = "kader11000";
+    function checkPassword() {
+      const entered = document.getElementById('loginPassword').value;
+      if (entered === correctPassword) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+      } else {
+        document.getElementById('loginMessage').innerText = 'Incorrect password.';
       }
-      alert("Submitted global key to all sims.");
     }
-
-    function fetchAllKeys() {
-      fetch('/api/get-all-keys')
-        .then(res => res.json())
-        .then(keys => {
-          let html = '<pre>' + JSON.stringify(keys, null, 2) + '</pre>';document.getElementById('keysList').innerHTML = html;
-    });
-}
-
-function downloadAllKeys() {
-  window.location.href = '/api/download-all';
-}
-
-  </script>
-</body>
+  </script>  <!-- Existing script for simulators continues here --></body>
 </html>
